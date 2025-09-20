@@ -8,7 +8,7 @@ import type { ServerCharacter } from '../types/server';
 type GameState = 'home' | 'playing';
 
 export default function Page() {
-  const [state, setState] = useState<GameState>('playing');
+  const [state, setState] = useState<GameState>('home');
   const [n, setN] = useState<number>(1);
   const [characters, setCharacters] = useState<ServerCharacter[]>([]);
 

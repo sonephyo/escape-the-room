@@ -5,12 +5,14 @@ export type XY = { x: number; y: number };
 export interface ServerCharacter {
   id: string;
   name?: string;
-  // If the backend includes positions, we’ll use them; otherwise we fall back in the map
-  position?: XY;
+  description?: string;
+  puzzle?: string;
+  solution?: string;          // expected answer from backend
+  building?: string;          // e.g. "Goldwin Smith Hall" or "goldwin-smith"
+  position?: XY;              // backend optional override
   color?: string;
   speed?: number;
-  // allow extra fields without using `any`
-  [key: string]: unknown;
+  [key: string]: unknown;     // allow extra fields without `any`
 }
 
 // The backend might return an array directly or wrap it in { characters: [...] }
@@ -18,12 +20,16 @@ export type CharactersResponse = { characters: ServerCharacter[] } | ServerChara
 
 export function toCharactersArray(resp: unknown): ServerCharacter[] {
   if (Array.isArray(resp)) {
-    return resp.filter((c): c is ServerCharacter => typeof c === 'object' && c !== null && 'id' in (c as any));
+    return resp.filter(
+      (c): c is ServerCharacter => typeof c === 'object' && c !== null && 'id' in (c as Record<string, unknown>)
+    );
   }
   if (resp && typeof resp === 'object' && 'characters' in resp) {
     const arr = (resp as { characters?: unknown }).characters;
     if (Array.isArray(arr)) {
-      return arr.filter((c): c is ServerCharacter => typeof c === 'object' && c !== null && 'id' in (c as any));
+      return arr.filter(
+        (c): c is ServerCharacter => typeof c === 'object' && c !== null && 'id' in (c as Record<string, unknown>)
+      );
     }
   }
   return [];

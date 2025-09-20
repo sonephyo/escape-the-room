@@ -28,7 +28,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
     setErr(null);
     setLoading(true);
     try {
-      const res = await fetch('/api/getchar', {   // 👈 Next API route
+      const res = await fetch('/api/getchar', {   
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ n }),
