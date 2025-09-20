@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // components/AkoolPersonaModal.tsx
 'use client';
@@ -11,13 +12,10 @@ import type { Persona } from '@/config/akoolPersonas';
 type Props = {
   open: boolean;
   onClose: () => void;
-  persona: Persona & {
-    /** Optional list of backup avatar IDs (avtr_...) to try if the primary is busy */
-    fallbackAvatarIds?: string[];
-  };
-  openapiHost: string;   // e.g. 'https://openapi.akool.com'
-  openapiToken: string;  // Bearer token
-  sessionMinutes?: number; // default 10
+  persona: Persona & { fallbackAvatarIds?: string[] };
+  openapiHost: string;   // live only
+  openapiToken: string;  // live only
+  sessionMinutes?: number;
 };
 
 type Credentials = {
@@ -27,6 +25,58 @@ type Credentials = {
   agora_uid: number;
 };
 
+const MOCK = process.env.NEXT_PUBLIC_AKOOL_MODE === 'mock';
+
+// -----------------------------
+// Mock helpers (no credits)
+// -----------------------------
+function useMockPersona(
+  enabled: boolean,
+  personaName: string,
+  onClose: () => void
+) {
+  const [joined, setJoined] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const [micEnabled, setMicEnabled] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    // simulate “start session”
+    const t = setTimeout(() => {
+      setJoined(true);
+      setConnected(true);
+      setLog((L) => [...L, `[system] Connected to ${personaName} (mock)`]);
+    }, 300);
+    return () => {
+      clearTimeout(t);
+      setJoined(false);
+      setConnected(false);
+      setMicEnabled(false);
+    };
+  }, [enabled, personaName]);
+
+  const send = (text: string) => {
+    setLog((L) => [...L, `you: ${text}`]);
+    // simulate persona typing back
+    const hint = `I am ${personaName}. I’ll guide you without revealing the answer. Think step by step and look for contradictions.`;
+    setTimeout(() => setLog((L) => [...L, `agent: ${hint}`]), 400);
+    // optional: voice via Web Speech API (still free)
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance(hint);
+      u.rate = 1.0; u.pitch = 1.0; u.lang = 'en-US';
+      window.speechSynthesis.speak(u);
+    }
+  };
+
+  return {
+    joined, connected, micEnabled, setMicEnabled, log, send,
+  };
+}
+
+// -----------------------------
+// Live helpers (real Akool/Agora)
+// -----------------------------
 function isJson(resp: Response) {
   return (resp.headers.get('content-type') || '').toLowerCase().includes('application/json');
 }
@@ -48,7 +98,6 @@ async function createAkoolSession(
   }
   const json = await resp.json();
   if (json.code !== 1000) {
-    // Pass through Akool error message
     throw new Error(json.msg || 'Akool session error');
   }
   const data = json.data || {};
@@ -65,10 +114,13 @@ async function closeAkoolSession(host: string, token: string, sessionId: string)
       body: JSON.stringify({ session_id: sessionId }),
     });
   } catch {
-    // swallow cleanup errors
+    // ignore
   }
 }
 
+// -----------------------------
+// Component
+// -----------------------------
 export function AkoolPersonaModal({
   open,
   onClose,
@@ -77,6 +129,12 @@ export function AkoolPersonaModal({
   openapiToken,
   sessionMinutes = 10,
 }: Props) {
+  // MOCK PATH — never touches Akool or Agora
+  if (MOCK) {
+    return <AkoolPersonaModalMock open={open} onClose={onClose} persona={persona} />;
+  }
+
+  // LIVE PATH
   const { client } = useAgora();
   const [joining, setJoining] = useState(false);
   const [joined, setJoined] = useState(false);
@@ -84,34 +142,24 @@ export function AkoolPersonaModal({
   const [micEnabled, setMicEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
-
-  // Keep track of our own published local tracks (don’t touch client.localTracks!)
   const localTracksRef = useRef<any[]>([]);
-
-  // pick primary + fallbacks
-  const avatarCandidates = [
-    persona.avatarId,
-    ...(persona.fallbackAvatarIds ?? []),
-  ].filter(Boolean);
+  const avatarCandidates = [persona.avatarId, ...(persona.fallbackAvatarIds ?? [])].filter(Boolean);
 
   useEffect(() => {
     if (!open || !client) return;
 
     let cancelled = false;
-    let joinedOnce = false;
 
     const start = async () => {
       setJoining(true);
       setError(null);
 
       try {
-        // Ensure we have at least one plausible avatar id
-        const nextId = avatarCandidates.find(id => id.startsWith('avtr_'));
-        if (!nextId) {
-          throw new Error('Persona not configured with a valid Akool avatarId (must start with "avtr_").');
-        }
+        const nextId = avatarCandidates.find(id => typeof id === 'string' && id.trim().length > 0);
+        if (!nextId) throw new Error('Persona missing avatarId.');
 
-        // Try primary, optionally fallbacks if “busy/lock_session”
+
+        // try primary + fallbacks if busy
         let lastErr: unknown = null;
         let creds: Credentials | null = null;
         let sid = '';
@@ -129,31 +177,25 @@ export function AkoolPersonaModal({
             });
             sid = sessionId;
             creds = c;
-            break; // success
+            break;
           } catch (e: any) {
             lastErr = e;
             const msg = String(e?.message || '');
-            // These indicate the avatar is currently in use
             if (/busy|lock_session|in use|Data directory not found/i.test(msg)) {
-              // Try next candidate
               continue;
             }
-            // Other error -> bail immediately
             throw e;
           }
         }
 
         if (!creds) {
-          // exhausted candidates
           const msg = String((lastErr as any)?.message || 'All candidate avatars are busy/unavailable.');
           throw new Error(msg);
         }
-
         if (cancelled) return;
 
         setSessionId(sid);
 
-        // Subscribe to streams
         client.on('user-published', async (user: any, mediaType: 'video' | 'audio') => {
           try {
             const track = await client.subscribe(user, mediaType);
@@ -180,10 +222,8 @@ export function AkoolPersonaModal({
         if (cancelled) return;
 
         setJoined(true);
-        joinedOnce = true;
         setConnected(true);
 
-        // Configure avatar params
         await setAvatarParams(client as RTCClient, {
           vid: persona.voiceId,
           lang: persona.language ?? 'en',
@@ -192,7 +232,6 @@ export function AkoolPersonaModal({
           vparams: persona.voiceParams,
         });
 
-        // Initial system prompt
         await sendMessageToAvatar(
           client as RTCClient,
           `sys-${Date.now()}`,
@@ -201,9 +240,8 @@ export function AkoolPersonaModal({
       } catch (e: any) {
         const msg = String(e?.message || e);
         setError(msg);
-        // Friendly notice for “busy”
         if (/busy|lock_session|in use/i.test(msg)) {
-          alert('This avatar is currently in use. Try again in a minute or configure a fallback avatar.');
+          alert('This avatar is currently in use. Try again shortly or configure a fallback avatar.');
         }
         onClose();
       } finally {
@@ -216,25 +254,19 @@ export function AkoolPersonaModal({
     return () => {
       cancelled = true;
 
-      // Unpublish/stop our local tracks
+      // unpublish/stop our own local tracks
       const tracks = localTracksRef.current;
       localTracksRef.current = [];
       (async () => {
-        try {
-          for (const t of tracks) {
-            try { await client.unpublish(t); } catch {}
-            try { t.stop?.(); t.close?.(); } catch {}
-          }
-        } catch {}
+        for (const t of tracks) {
+          try { await client.unpublish(t); } catch {}
+          try { t.stop?.(); t.close?.(); } catch {}
+        }
       })();
 
-      // Leave channel and cleanup
       try { client.removeAllListeners?.(); } catch {}
-      (async () => {
-        try { await client.leave?.(); } catch {}
-      })();
+      (async () => { try { await client.leave?.(); } catch {} })();
 
-      // Close Akool session to prevent “busy” locks
       if (sessionId) {
         closeAkoolSession(openapiHost, openapiToken, sessionId);
       }
@@ -247,18 +279,17 @@ export function AkoolPersonaModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, client, persona, openapiHost, openapiToken, sessionMinutes]);
 
-  // Mic toggle with our own localTracksRef (don’t assign to client.localTracks!)
   const toggleMic = async () => {
     if (!client) return;
     try {
       if (!micEnabled) {
-        // audience cannot publish; switch to host if available
         if (typeof (client as any).setClientRole === 'function') {
           await (client as any).setClientRole('host');
         }
         const { default: AgoraRTC } = await import('agora-rtc-sdk-ng');
         const mic = await AgoraRTC.createMicrophoneAudioTrack();
         await client.publish(mic);
+        // track locally — do NOT assign to client.localTracks
         localTracksRef.current.push(mic);
         setMicEnabled(true);
       } else {
@@ -297,15 +328,11 @@ export function AkoolPersonaModal({
     <div className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center">
       <div className="bg-black border border-white p-4 w-[880px]">
         <div className="flex items-center justify-between mb-2 text-white font-mono">
-          <div>
-            Chatting with: <b>{persona.name}</b> ({persona.building})
-          </div>
+          <div>Chatting with: <b>{persona.name}</b> ({persona.building})</div>
           <button className="border px-2 py-1" onClick={onClose}>End</button>
         </div>
 
-        {error && (
-          <div className="mb-3 text-red-400 font-mono text-sm">{error}</div>
-        )}
+        {error && <div className="mb-3 text-red-400 font-mono text-sm">{error}</div>}
 
         {!client ? (
           <div className="text-white font-mono">Loading voice chat…</div>
@@ -317,11 +344,7 @@ export function AkoolPersonaModal({
 
             <div className="flex flex-col gap-2">
               <div className="flex gap-2 items-center">
-                <button
-                  className="border px-3 py-1 text-white disabled:opacity-60"
-                  onClick={toggleMic}
-                  disabled={!joined || joining}
-                >
+                <button className="border px-3 py-1 text-white disabled:opacity-60" onClick={toggleMic} disabled={!joined || joining}>
                   {micEnabled ? '🎙️ Mic On (click to mute)' : '🔇 Mic Off (click to enable)'}
                 </button>
                 <span className="text-white/70 text-sm font-mono">
@@ -346,6 +369,81 @@ export function AkoolPersonaModal({
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// -----------------------------
+// Mock-only view (no Akool calls)
+// -----------------------------
+function AkoolPersonaModalMock({
+  open, onClose, persona,
+}: { open: boolean; onClose: () => void; persona: Persona }) {
+  const [question, setQuestion] = useState('');
+  const { joined, connected, micEnabled, setMicEnabled, log, send } = useMockPersona(true, persona.name, onClose);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center">
+      <div className="bg-black border border-white p-4 w-[880px]">
+        <div className="flex items-center justify-between mb-2 text-white font-mono">
+          <div>Chatting with: <b>{persona.name}</b> ({persona.building}) — MOCK</div>
+          <button className="border px-2 py-1" onClick={onClose}>End</button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="border border-white/30 h-[420px] flex items-center justify-center">
+            {/* Local placeholder media so layout looks the same */}
+            <video
+              className="w-full h-full object-contain bg-black"
+              src="/mock-avatar.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2 items-center">
+              <button
+                className="border px-3 py-1 text-white"
+                onClick={() => setMicEnabled((m) => !m)}
+              >
+                {micEnabled ? '🎙️ Mic On (mock)' : '🔇 Mic Off (mock)'}
+              </button>
+              <span className="text-white/70 text-sm font-mono">
+                {joined ? (connected ? 'Connected (mock)' : 'Joining…') : 'Starting…'}
+              </span>
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (send(question), setQuestion(''))}
+                className="flex-1 bg-black border border-white/50 text-white px-2 py-1 font-mono"
+                placeholder="Ask for a hint… (mock)"
+              />
+              <button
+                className="border px-3 py-1 text-white"
+                onClick={() => { send(question); setQuestion(''); }}
+              >
+                Send
+              </button>
+            </div>
+
+            <div className="text-white/60 text-xs font-mono">
+              Mock mode: no Akool/Agora usage. Good for UI flows & QA.
+            </div>
+
+            <div className="mt-2 p-2 h-40 overflow-auto bg-black/40 border border-white/10 text-white font-mono text-xs">
+              {log.map((l, i) => <div key={i}>{l}</div>)}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

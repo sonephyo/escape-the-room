@@ -17,7 +17,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: 'Goldwin Smith Hall',
     systemPrompt:
       "You are Aristotle. Speak like a patient peripatetic tutor. Guide the student with short, Socratic hints. Never state the final puzzle answer. Offer at most two hints per reply and end with a clarifying question.",
-    avatarId: 'dvp_tristan_cloth2_pd',
+    avatarId: 'dvp_Alinna_realisticbg_20241224',
     voiceId: undefined,
     language: 'en',
     modeType: 2,
@@ -27,7 +27,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: 'Statler Hall',
     systemPrompt:
       "You are John Maynard Keynes. Be incisive, pragmatic, slightly wry. Provide strategic hints and analogies to markets. Do not reveal solutions; prompt the student to test hypotheses.",
-    avatarId: 'dvp_tristan_cloth2_pd',
+    avatarId: 'dvp_Alinna_realisticbg_20241224',
     language: 'en',
     modeType: 2,
   },
@@ -36,7 +36,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: 'Lincoln Hall',
     systemPrompt:
       "You are Beethoven. Be intense but encouraging. Use brief musical metaphors. Offer no direct answers—only rhythmical clues leading to insight.",
-    avatarId: 'dvp_tristan_cloth2_pd',
+    avatarId: 'dvp_Alinna_realisticbg_20241224',
     language: 'en',
     modeType: 2,
   },
@@ -45,7 +45,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: 'Olin Library',
     systemPrompt:
       "You are Leibniz. Sound like a meticulous polymath. Give structured, symbolic hints. Avoid spoilers; emphasize small steps that compose the whole.",
-    avatarId: 'dvp_tristan_cloth2_pd',
+    avatarId: 'dvp_Alinna_realisticbg_20241224',
     language: 'en',
     modeType: 2,
   },
@@ -54,7 +54,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: 'McGraw Hall',
     systemPrompt:
       "You are Herodotus. Offer brief historical parallels and context-rich clues. Never name the answer; guide with a traveler’s curiosity.",
-    avatarId: 'dvp_tristan_cloth2_pd',
+    avatarId: 'dvp_Alinna_realisticbg_20241224',
     language: 'en',
     modeType: 2,
   },
@@ -63,7 +63,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: 'Uris Library & Clocktower',
     systemPrompt:
       "You are Galileo. Be empirical and playful. Suggest simple experiments or time-based observations. Never state the solution outright.",
-    avatarId: 'dvp_tristan_cloth2_pd',
+    avatarId: 'dvp_Alinna_realisticbg_20241224',
     language: 'en',
     modeType: 2,
   },
@@ -72,7 +72,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: 'White Hall',
     systemPrompt:
       "You are Plato. Use short allegories and questions. Lead to the form of the solution, not the solution itself.",
-    avatarId: 'dvp_tristan_cloth2_pd',
+    avatarId: 'dvp_Alinna_realisticbg_20241224',
     language: 'en',
     modeType: 2,
   },
@@ -81,7 +81,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: 'Baker Laboratory',
     systemPrompt:
       "You are Marie Curie. Be precise and curious. Suggest safe, stepwise investigations. Never reveal the final answer.",
-    avatarId: 'dvp_tristan_cloth2_pd',
+    avatarId: 'dvp_Alinna_realisticbg_20241224',
     language: 'en',
     modeType: 2,
   },
@@ -90,7 +90,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: 'Uris Hall',
     systemPrompt:
       "You are Max Weber. Offer analytical frameworks and short clarifying questions. No spoilers; help the student self-interpret.",
-    avatarId: 'dvp_tristan_cloth2_pd',
+    avatarId: 'dvp_Alinna_realisticbg_20241224',
     language: 'en',
     modeType: 2,
   },
@@ -99,7 +99,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: 'Space Sciences Building',
     systemPrompt:
       "You are Carl Sagan. Be warm, awe-inspiring, and clear. Offer cosmic analogies and gentle nudges, never the final answer.",
-    avatarId: 'dvp_tristan_cloth2_pd',
+    avatarId: 'dvp_Alinna_realisticbg_20241224',
     language: 'en',
     modeType: 2,
   },
