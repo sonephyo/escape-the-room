@@ -1,37 +1,56 @@
-// Shared types for the /getchar payload
+// Shared types for the /getchar (or get_n_random_chars) payload
 
 export type XY = { x: number; y: number };
 
 export interface ServerCharacter {
-  id: string;
+  id: string;               // always present after normalization
   name?: string;
   description?: string;
   puzzle?: string;
-  solution?: string;          // expected answer from backend
-  building?: string;          // e.g. "Goldwin Smith Hall" or "goldwin-smith"
-  position?: XY;              // backend optional override
+  solution?: string;
+  building?: string;        // e.g. "Olin Library"
+  position?: XY;
   color?: string;
   speed?: number;
-  [key: string]: unknown;     // allow extra fields without `any`
+  [key: string]: unknown;
 }
 
-// The backend might return an array directly or wrap it in { characters: [...] }
-export type CharactersResponse = { characters: ServerCharacter[] } | ServerCharacter[];
+// The API might return an array or { characters: [...] }.
+// It might also use `_id` instead of `id`. Normalize all of that.
+type RawChar = Record<string, unknown> & { id?: unknown; _id?: unknown };
+
+function normalizeOne(c: RawChar, idx: number): ServerCharacter | null {
+  const id =
+    (typeof c.id === 'string' && c.id) ||
+    (typeof c._id === 'string' && c._id) ||
+    `agent-${idx}`;
+
+  // Copy all fields over, but guarantee a string `id`
+  return { ...(c as Record<string, unknown>), id } as ServerCharacter;
+}
+
+export type CharactersResponse =
+  | { characters: RawChar[] }
+  | RawChar[];
 
 export function toCharactersArray(resp: unknown): ServerCharacter[] {
+  // Array form
   if (Array.isArray(resp)) {
-    return resp.filter(
-      (c): c is ServerCharacter => typeof c === 'object' && c !== null && 'id' in (c as Record<string, unknown>)
-    );
+    return resp
+      .map((c, i) => (c && typeof c === 'object' ? normalizeOne(c as RawChar, i) : null))
+      .filter((x): x is ServerCharacter => !!x);
   }
+
+  // Wrapped form
   if (resp && typeof resp === 'object' && 'characters' in resp) {
     const arr = (resp as { characters?: unknown }).characters;
     if (Array.isArray(arr)) {
-      return arr.filter(
-        (c): c is ServerCharacter => typeof c === 'object' && c !== null && 'id' in (c as Record<string, unknown>)
-      );
+      return arr
+        .map((c, i) => (c && typeof c === 'object' ? normalizeOne(c as RawChar, i) : null))
+        .filter((x): x is ServerCharacter => !!x);
     }
   }
+
   return [];
 }
 

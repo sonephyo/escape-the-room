@@ -28,10 +28,13 @@ export const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
     setErr(null);
     setLoading(true);
     try {
-      const res = await fetch('/api/getchar', {   
-        method: 'POST',
+      const url = new URL('/api/get_n_random_chars', window.location.origin);
+url.searchParams.set('n', String(n));
+
+
+      const res = await fetch(url.toString(), {   
+        method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ n }),
       });
 
       let json: unknown = undefined;
