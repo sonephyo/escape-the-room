@@ -32,8 +32,8 @@ type CornellMapProps = {
 const MOVE_SPEED = 5;
 const CHARACTER_SIZE = 24;
 
-const VIEWPORT_WIDTH = MAP_BOUNDS.width - 300;
-const VIEWPORT_HEIGHT = MAP_BOUNDS.height - 200;
+const VIEWPORT_WIDTH = 800;
+const VIEWPORT_HEIGHT = 600;
 
 const INTERACT_RADIUS = 42; // px from building center to trigger modal
 
@@ -233,7 +233,7 @@ export const CornellMap: React.FC<CornellMapProps> = ({ n, characters }) => {
     return () => clearInterval(gameLoop);
   }, [moveCharacter]);
 
-  // Camera centered on player, clamped
+  // Camera centered on player, clamped to map bounds
   const rawCamX = character.position.x - VIEWPORT_WIDTH / 2;
   const rawCamY = character.position.y - VIEWPORT_HEIGHT / 2;
   const maxCamX = Math.max(0, MAP_BOUNDS.width - VIEWPORT_WIDTH);
@@ -349,29 +349,15 @@ export const CornellMap: React.FC<CornellMapProps> = ({ n, characters }) => {
             transform: `translate3d(${-cameraX}px, ${-cameraY}px, 0)`,
             transition: "transform 0.05s linear",
             willChange: "transform",
-            background: `repeating-conic-gradient(
-              from 0deg at 50% 50%,
-              #90EE90 0deg 90deg,
-              #98FB98 90deg 180deg,
-              #90EE90 180deg 270deg,
-              #98FB98 270deg 360deg
-            )`,
-            backgroundSize: "32px 32px",
-            imageRendering: "pixelated",
+            backgroundImage: "url('/assets/campus_map.png')",
+            backgroundSize: "100% 100%",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
           }}
         >
-          {/* Paths / Trees / Buildings */}
-          {PATHS.map((p, i) => (
-            <Path key={i} x={p.x} y={p.y} width={p.width} height={p.height} />
-          ))}
-          {TREES.map((t, i) => (
-            <Tree key={i} x={t.x} y={t.y} />
-          ))}
-          {CORNELL_BUILDINGS.map((b) => (
-            <Building key={b.id} building={b} />
-          ))}
+          {/* Visual elements removed - using background image instead */}
 
-          {/* NPC markers at building centers */}
+          {/* Agent markers at building centers */}
           {agents.map((a) => (
             <AgentMarker
               key={a.server.id}
