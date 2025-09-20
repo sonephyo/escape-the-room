@@ -10,11 +10,11 @@ import { Character as CharacterSprite } from '@/components/Character';
 import { AkoolPersonaModal } from '@/components/AkoolPersonaModal';
 import { PERSONAS } from '@/config/akoolPersonas';
 
-const SPEED = 5;
+const SPEED = 1;
 const SIZE = 24;
 const VIEW_W = 800;
 const VIEW_H = 600;
-
+// 277d48b
 // Map your game context → PERSONAS keys.
 // ⚠️ Change these strings to the exact keys you have in PERSONAS.
 function resolvePersonaFor(country: CountryKey, hotspotId: string): keyof typeof PERSONAS | undefined {
