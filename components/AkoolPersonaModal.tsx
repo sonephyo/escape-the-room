@@ -8,6 +8,8 @@ import { useAgora } from '@/lib/akool/AgoraProvider';
 import { setAvatarParams, sendMessageToAvatar } from '@/lib/akool/agoraHelper';
 import type { RTCClient } from '@/lib/akool/rtcTypes';
 import type { Persona } from '@/config/akoolPersonas';
+import StableModal from '@/components/ui/StableModal';
+
 
 type Props = {
   open: boolean;
@@ -129,6 +131,8 @@ export function AkoolPersonaModal({
   openapiToken,
   sessionMinutes = 10,
 }: Props) {
+    <StableModal open={open} onClose={onClose} zIndex={60}>
+
   // MOCK PATH — never touches Akool or Agora
   if (MOCK) {
     return <AkoolPersonaModalMock open={open} onClose={onClose} persona={persona} />;
@@ -446,5 +450,6 @@ function AkoolPersonaModalMock({
         </div>
       </div>
     </div>
+    </StableModal>
   );
 }
