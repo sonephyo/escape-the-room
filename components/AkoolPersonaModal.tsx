@@ -46,12 +46,7 @@ function PortalFrame({
   useEffect(() => setMounted(true), []);
   if (!open || !mounted) return null;
   return createPortal(
-    <div
-      className="fixed inset-0 flex items-center justify-center"
-      style={{ zIndex: z }}
-      aria-modal="true"
-      role="dialog"
-    >
+    <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: z }} aria-modal="true" role="dialog">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
       <div className="relative w-[min(92vw,900px)] max-h-[88vh] overflow-hidden rounded-2xl border border-white/20 bg-neutral-950 shadow-2xl">
         {children}
@@ -85,6 +80,7 @@ function useMockPersona(enabled: boolean, personaName: string) {
     };
   }, [enabled, personaName]);
 
+  // mock speech loop for fun
   const send = (text: string) => {
     if (!text.trim()) return;
     setLog((L) => [...L, `you: ${text}`]);
@@ -104,9 +100,7 @@ function useMockPersona(enabled: boolean, personaName: string) {
  * Live helpers (Akool/Agora)
  * ----------------------------- */
 function isJson(resp: Response) {
-  return (resp.headers.get('content-type') || '')
-    .toLowerCase()
-    .includes('application/json');
+  return (resp.headers.get('content-type') || '').toLowerCase().includes('application/json');
 }
 
 async function createAkoolSession(
@@ -175,8 +169,7 @@ export function AkoolPersonaModal({
   const [sessionId, setSessionId] = useState<string>('');
   const [reloadKey, setReloadKey] = useState(0);
   const localTracksRef = useRef<any[]>([]);
-  const avatarCandidates = [persona.avatarId, ...(persona.fallbackAvatarIds ?? [])]
-    .filter(Boolean) as string[];
+  const avatarCandidates = [persona.avatarId, ...(persona.fallbackAvatarIds ?? [])].filter(Boolean) as string[];
 
   useEffect(() => {
     if (!open || !client) return;
@@ -328,17 +321,6 @@ export function AkoolPersonaModal({
     }
   };
 
-  const [question, setQuestion] = useState('');
-  const send = async () => {
-    if (!client || !question.trim()) return;
-    try {
-      await sendMessageToAvatar(client as RTCClient, `q-${Date.now()}`, question.trim());
-      setQuestion('');
-    } catch (e) {
-      console.error('send chat failed', e);
-    }
-  };
-
   return (
     <PortalFrame open={open} onClose={onClose}>
       <div className="p-4">
@@ -360,39 +342,46 @@ export function AkoolPersonaModal({
           <div className="text-white font-mono">Loading voice chat…</div>
         ) : (
           <div className="grid grid-cols-2 gap-4">
+            {/* Video */}
             <div className="border border-white/20 rounded-xl h-[420px] overflow-hidden flex items-center justify-center">
               <div id="akool-remote-video" className="w-full h-full bg-black" />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2 items-center">
-                <button
-                  className="border border-white/30 px-3 py-1 text-white disabled:opacity-60 rounded"
-                  onClick={toggleMic}
-                  disabled={!joined || joining}
-                >
-                  {micEnabled ? '🎙️ Mic On (click to mute)' : '🔇 Mic Off (click to enable)'}
-                </button>
-                <span className="text-white/70 text-sm font-mono">
-                  {joined ? (connected ? 'Connected' : 'Joining…') : (joining ? 'Starting…' : (error ? 'Error' : 'Idle'))}
-                </span>
+            {/* BIG MIC PANEL */}
+            <div className="flex flex-col items-center justify-center gap-4">
+              <button
+                type="button"
+                aria-pressed={micEnabled}
+                onClick={toggleMic}
+                disabled={!joined || joining}
+                className={[
+                  'relative w-36 h-36 rounded-full border-4 flex items-center justify-center select-none',
+                  'transition-all duration-150 ease-out',
+                  !joined || joining
+                    ? 'opacity-60 cursor-not-allowed border-white/20 bg-neutral-800'
+                    : micEnabled
+                    ? 'bg-red-600/80 border-red-300 shadow-[0_0_0_8px_rgba(239,68,68,0.25)] animate-pulse'
+                    : 'bg-neutral-800 border-white/20 hover:bg-neutral-700'
+                ].join(' ')}
+                title={micEnabled ? 'Mute mic' : (joined ? 'Enable mic' : 'Joining…')}
+              >
+                {/* Mic icon */}
+                <svg viewBox="0 0 24 24" className="w-14 h-14 text-white" fill="currentColor" aria-hidden="true">
+                  <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3z"></path>
+                  <path d="M19 11a1 1 0 1 1 2 0 9 9 0 0 1-8 8v3h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-3a9 9 0 0 1-8-8 1 1 0 1 1 2 0 7 7 0 1 0 14 0z"></path>
+                </svg>
+              </button>
+
+              <div className="text-white/80 font-mono text-sm">
+                {joined
+                  ? (connected
+                      ? (micEnabled ? 'Listening… tap to mute' : 'Tap to talk')
+                      : 'Joining…')
+                  : (joining ? 'Starting…' : (error ? 'Error' : 'Idle'))}
               </div>
 
-              <div className="flex gap-2">
-                <input
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && send()}
-                  className="flex-1 bg-black border border-white/20 text-white px-2 py-1 font-mono rounded"
-                  placeholder="Ask for a hint…"
-                />
-                <button className="border border-white/30 px-3 py-1 text-white rounded" onClick={send}>
-                  Send
-                </button>
-              </div>
-
-              <div className="text-white/60 text-xs font-mono">
-                Tips: Speak or type. The persona will guide — not spoil — the solution.
+              <div className="text-white/50 font-mono text-xs text-center">
+                Your voice is sent to the persona while the mic is on.
               </div>
             </div>
           </div>
@@ -403,11 +392,10 @@ export function AkoolPersonaModal({
 }
 
 /* -----------------------------
- * Mock-only panel
+ * Mock-only panel (same UI)
  * ----------------------------- */
 function MockPanel({ onClose, persona }: { onClose: () => void; persona: Persona }) {
-  const [question, setQuestion] = useState('');
-  const { joined, connected, micEnabled, setMicEnabled, log, send } = useMockPersona(true, persona.name);
+  const { joined, connected, micEnabled, setMicEnabled } = useMockPersona(true, persona.name);
 
   return (
     <div className="p-4">
@@ -428,41 +416,32 @@ function MockPanel({ onClose, persona }: { onClose: () => void; persona: Persona
           />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2 items-center">
-            <button
-              className="border border-white/30 px-3 py-1 text-white rounded"
-              onClick={() => setMicEnabled((m) => !m)}
-            >
-              {micEnabled ? '🎙️ Mic On (mock)' : '🔇 Mic Off (mock)'}
-            </button>
-            <span className="text-white/70 text-sm font-mono">
-              {joined ? (connected ? 'Connected (mock)' : 'Joining…') : 'Starting…'}
-            </span>
+        <div className="flex flex-col items-center justify-center gap-4">
+          <button
+            type="button"
+            aria-pressed={micEnabled}
+            onClick={() => setMicEnabled((m) => !m)}
+            className={[
+              'relative w-36 h-36 rounded-full border-4 flex items-center justify-center select-none',
+              'transition-all duration-150 ease-out',
+              micEnabled
+                ? 'bg-red-600/80 border-red-300 shadow-[0_0_0_8px_rgba(239,68,68,0.25)] animate-pulse'
+                : 'bg-neutral-800 border-white/20 hover:bg-neutral-700'
+            ].join(' ')}
+            title={micEnabled ? 'Mute mic' : 'Enable mic'}
+          >
+            <svg viewBox="0 0 24 24" className="w-14 h-14 text-white" fill="currentColor" aria-hidden="true">
+              <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3z"></path>
+              <path d="M19 11a1 1 0 1 1 2 0 9 9 0 0 1-8 8v3h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-3a9 9 0 0 1-8-8 1 1 0 1 1 2 0 7 7 0 1 0 14 0z"></path>
+            </svg>
+          </button>
+
+          <div className="text-white/80 font-mono text-sm">
+            {joined ? (connected ? (micEnabled ? 'Listening… tap to mute' : 'Tap to talk') : 'Joining…') : 'Starting…'}
           </div>
 
-          <div className="flex gap-2">
-            <input
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (send(question), setQuestion(''))}
-              className="flex-1 bg-black border border-white/20 text-white px-2 py-1 font-mono rounded"
-              placeholder="Ask for a hint… (mock)"
-            />
-            <button
-              className="border border-white/30 px-3 py-1 text-white rounded"
-              onClick={() => { send(question); setQuestion(''); }}
-            >
-              Send
-            </button>
-          </div>
-
-          <div className="text-white/60 text-xs font-mono">
-            Mock mode: no Akool/Agora usage. Good for UI flows & QA.
-          </div>
-
-          <div className="mt-2 p-2 h-40 overflow-auto bg-black/40 border border-white/10 text-white font-mono text-xs rounded">
-            {log.map((l, i) => <div key={i}>{l}</div>)}
+          <div className="text-white/50 font-mono text-xs text-center">
+            Mock mode: no network calls. Great for QA.
           </div>
         </div>
       </div>
