@@ -29,7 +29,7 @@
 
 import { useState } from 'react';
 import { StartScreen } from '@/components/StartScreen';
-import {CountryScene} from '@/components/CountryScene';
+import { CountryScene } from '@/components/CountryScene';
 import type { CountryKey } from '@/game/countries';
 
 type Screen = 'home' | 'world';

@@ -4,18 +4,18 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAgora } from '@/lib/akool/AgoraProvider';
 import { setAvatarParams, sendMessageToAvatar } from '@/lib/akool/agoraHelper';
 import type { RTCClient } from '@/lib/akool/rtcTypes';
 import type { Persona } from '@/config/akoolPersonas';
-import StableModal from '@/components/ui/StableModal';
 
 type Props = {
   open: boolean;
   onClose: () => void;
   persona: Persona & { fallbackAvatarIds?: string[] };
-  openapiHost: string;   // live only
-  openapiToken: string;  // live only
+  openapiHost: string;   // required in live mode
+  openapiToken: string;  // required in live mode
   sessionMinutes?: number;
 };
 
@@ -28,14 +28,43 @@ type Credentials = {
 
 const MOCK = process.env.NEXT_PUBLIC_AKOOL_MODE === 'mock';
 
-// -----------------------------
-// Mock helpers (no credits)
-// -----------------------------
-function useMockPersona(
-  enabled: boolean,
-  personaName: string,
-  _onClose: () => void
-) {
+/* -----------------------------
+ * Portal wrapper (prevents clipping)
+ * ----------------------------- */
+function PortalFrame({
+  open,
+  onClose,
+  children,
+  z = 1000,
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  z?: number;
+}) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!open || !mounted) return null;
+  return createPortal(
+    <div
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ zIndex: z }}
+      aria-modal="true"
+      role="dialog"
+    >
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative w-[min(92vw,900px)] max-h-[88vh] overflow-hidden rounded-2xl border border-white/20 bg-neutral-950 shadow-2xl">
+        {children}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+/* -----------------------------
+ * Mock helpers (no Akool credits)
+ * ----------------------------- */
+function useMockPersona(enabled: boolean, personaName: string) {
   const [joined, setJoined] = useState(false);
   const [connected, setConnected] = useState(false);
   const [micEnabled, setMicEnabled] = useState(false);
@@ -68,16 +97,16 @@ function useMockPersona(
     }
   };
 
-  return {
-    joined, connected, micEnabled, setMicEnabled, log, send,
-  };
+  return { joined, connected, micEnabled, setMicEnabled, log, send };
 }
 
-// -----------------------------
-// Live helpers (real Akool/Agora)
-// -----------------------------
+/* -----------------------------
+ * Live helpers (Akool/Agora)
+ * ----------------------------- */
 function isJson(resp: Response) {
-  return (resp.headers.get('content-type') || '').toLowerCase().includes('application/json');
+  return (resp.headers.get('content-type') || '')
+    .toLowerCase()
+    .includes('application/json');
 }
 
 async function createAkoolSession(
@@ -96,9 +125,8 @@ async function createAkoolSession(
     throw new Error(`Unexpected response ${resp.status}: ${txt.slice(0, 200)}`);
   }
   const json = await resp.json();
-  if (json.code !== 1000) {
-    throw new Error(json.msg || 'Akool session error');
-  }
+  if (json.code !== 1000) throw new Error(json.msg || 'Akool session error');
+
   const data = json.data || {};
   const creds: Credentials = data.credentials || data.stream_urls || data.agora || {};
   return { sessionId: data._id ?? '', creds };
@@ -113,13 +141,13 @@ async function closeAkoolSession(host: string, token: string, sessionId: string)
       body: JSON.stringify({ session_id: sessionId }),
     });
   } catch {
-    // ignore
+    // best-effort
   }
 }
 
-// -----------------------------
-// Component
-// -----------------------------
+/* -----------------------------
+ * Component
+ * ----------------------------- */
 export function AkoolPersonaModal({
   open,
   onClose,
@@ -130,16 +158,14 @@ export function AkoolPersonaModal({
 }: Props) {
   if (!open) return null;
 
-  // MOCK PATH — never touches Akool or Agora
   if (MOCK) {
     return (
-      <StableModal open={open} onClose={onClose} zIndex={60}>
-        <AkoolPersonaModalMock open={open} onClose={onClose} persona={persona} />
-      </StableModal>
+      <PortalFrame open={open} onClose={onClose}>
+        <MockPanel onClose={onClose} persona={persona} />
+      </PortalFrame>
     );
   }
 
-  // LIVE PATH
   const { client } = useAgora();
   const [joining, setJoining] = useState(false);
   const [joined, setJoined] = useState(false);
@@ -147,13 +173,13 @@ export function AkoolPersonaModal({
   const [micEnabled, setMicEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
-  const [reloadKey, setReloadKey] = useState(0); // allow Retry without closing
+  const [reloadKey, setReloadKey] = useState(0);
   const localTracksRef = useRef<any[]>([]);
-  const avatarCandidates = [persona.avatarId, ...(persona.fallbackAvatarIds ?? [])].filter(Boolean) as string[];
+  const avatarCandidates = [persona.avatarId, ...(persona.fallbackAvatarIds ?? [])]
+    .filter(Boolean) as string[];
 
   useEffect(() => {
     if (!open || !client) return;
-
     let cancelled = false;
 
     const start = async () => {
@@ -161,10 +187,9 @@ export function AkoolPersonaModal({
       setError(null);
 
       try {
-        const nextId = avatarCandidates.find(id => typeof id === 'string' && id.trim().length > 0);
-        if (!nextId) throw new Error('Persona missing avatarId.');
+        const validCandidate = avatarCandidates.find(id => typeof id === 'string' && id.trim().length > 0);
+        if (!validCandidate) throw new Error('Persona missing avatarId.');
 
-        // try primary + fallbacks if busy
         let lastErr: unknown = null;
         let creds: Credentials | null = null;
         let sid = '';
@@ -186,9 +211,7 @@ export function AkoolPersonaModal({
           } catch (e: any) {
             lastErr = e;
             const msg = String(e?.message || '');
-            if (/busy|lock_session|in use|Data directory not found/i.test(msg)) {
-              continue;
-            }
+            if (/busy|lock_session|in use|Data directory not found/i.test(msg)) continue;
             throw e;
           }
         }
@@ -204,11 +227,8 @@ export function AkoolPersonaModal({
         client.on('user-published', async (user: any, mediaType: 'video' | 'audio') => {
           try {
             const track = await client.subscribe(user, mediaType);
-            if (mediaType === 'video') {
-              track.play('akool-remote-video', { fit: 'contain' });
-            } else {
-              track.play();
-            }
+            if (mediaType === 'video') track.play('akool-remote-video', { fit: 'contain' });
+            else track.play();
           } catch (e) {
             console.error('subscribe/play failed', e);
           }
@@ -245,7 +265,6 @@ export function AkoolPersonaModal({
       } catch (e: any) {
         const msg = String(e?.message || e);
         setError(msg);
-        // ⛔ Do NOT auto-close on error; show error and let user Retry or Close manually
       } finally {
         if (!cancelled) setJoining(false);
       }
@@ -256,7 +275,6 @@ export function AkoolPersonaModal({
     return () => {
       cancelled = true;
 
-      // unpublish/stop our own local tracks
       const tracks = localTracksRef.current;
       localTracksRef.current = [];
       (async () => {
@@ -269,9 +287,7 @@ export function AkoolPersonaModal({
       try { client.removeAllListeners?.(); } catch {}
       (async () => { try { await client.leave?.(); } catch {} })();
 
-      if (sessionId) {
-        closeAkoolSession(openapiHost, openapiToken, sessionId);
-      }
+      if (sessionId) closeAkoolSession(openapiHost, openapiToken, sessionId);
 
       setMicEnabled(false);
       setJoined(false);
@@ -324,37 +340,37 @@ export function AkoolPersonaModal({
   };
 
   return (
-    <StableModal open={open} onClose={onClose} zIndex={60}>
-      <div className="bg-black border border-white p-4 w-[880px]">
+    <PortalFrame open={open} onClose={onClose}>
+      <div className="p-4">
         <div className="flex items-center justify-between mb-2 text-white font-mono">
           <div>Chatting with: <b>{persona.name}</b> ({persona.building})</div>
           <div className="flex gap-2">
             {error && (
-              <button className="border px-2 py-1" onClick={() => setReloadKey((k) => k + 1)}>
+              <button className="border border-white/30 px-2 py-1" onClick={() => setReloadKey((k) => k + 1)}>
                 Retry
               </button>
             )}
-            <button className="border px-2 py-1" onClick={onClose}>End</button>
+            <button className="border border-white/30 px-2 py-1" onClick={onClose}>End</button>
           </div>
         </div>
 
-        {error && (
-          <div className="mb-3 text-red-400 font-mono text-sm">
-            {error}
-          </div>
-        )}
+        {error && <div className="mb-3 text-red-400 font-mono text-sm">{error}</div>}
 
         {!client ? (
           <div className="text-white font-mono">Loading voice chat…</div>
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            <div className="border border-white/30 h-[420px] flex items-center justify-center">
+            <div className="border border-white/20 rounded-xl h-[420px] overflow-hidden flex items-center justify-center">
               <div id="akool-remote-video" className="w-full h-full bg-black" />
             </div>
 
             <div className="flex flex-col gap-2">
               <div className="flex gap-2 items-center">
-                <button className="border px-3 py-1 text-white disabled:opacity-60" onClick={toggleMic} disabled={!joined || joining}>
+                <button
+                  className="border border-white/30 px-3 py-1 text-white disabled:opacity-60 rounded"
+                  onClick={toggleMic}
+                  disabled={!joined || joining}
+                >
                   {micEnabled ? '🎙️ Mic On (click to mute)' : '🔇 Mic Off (click to enable)'}
                 </button>
                 <span className="text-white/70 text-sm font-mono">
@@ -367,10 +383,12 @@ export function AkoolPersonaModal({
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && send()}
-                  className="flex-1 bg-black border border-white/50 text-white px-2 py-1 font-mono"
+                  className="flex-1 bg-black border border-white/20 text-white px-2 py-1 font-mono rounded"
                   placeholder="Ask for a hint…"
                 />
-                <button className="border px-3 py-1 text-white" onClick={send}>Send</button>
+                <button className="border border-white/30 px-3 py-1 text-white rounded" onClick={send}>
+                  Send
+                </button>
               </div>
 
               <div className="text-white/60 text-xs font-mono">
@@ -380,30 +398,26 @@ export function AkoolPersonaModal({
           </div>
         )}
       </div>
-    </StableModal>
+    </PortalFrame>
   );
 }
 
-// -----------------------------
-// Mock-only view (no Akool calls)
-// -----------------------------
-function AkoolPersonaModalMock({
-  open, onClose, persona,
-}: { open: boolean; onClose: () => void; persona: Persona }) {
-  if (!open) return null;
-
+/* -----------------------------
+ * Mock-only panel
+ * ----------------------------- */
+function MockPanel({ onClose, persona }: { onClose: () => void; persona: Persona }) {
   const [question, setQuestion] = useState('');
-  const { joined, connected, micEnabled, setMicEnabled, log, send } = useMockPersona(true, persona.name, onClose);
+  const { joined, connected, micEnabled, setMicEnabled, log, send } = useMockPersona(true, persona.name);
 
   return (
-    <div className="bg-black border border-white p-4 w-[880px]">
+    <div className="p-4">
       <div className="flex items-center justify-between mb-2 text-white font-mono">
         <div>Chatting with: <b>{persona.name}</b> ({persona.building}) — MOCK</div>
-        <button className="border px-2 py-1" onClick={onClose}>End</button>
+        <button className="border border-white/30 px-2 py-1" onClick={onClose}>End</button>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="border border-white/30 h-[420px] flex items-center justify-center">
+        <div className="border border-white/20 rounded-xl h-[420px] overflow-hidden flex items-center justify-center">
           <video
             className="w-full h-full object-contain bg-black"
             src="/mock-avatar.mp4"
@@ -417,7 +431,7 @@ function AkoolPersonaModalMock({
         <div className="flex flex-col gap-2">
           <div className="flex gap-2 items-center">
             <button
-              className="border px-3 py-1 text-white"
+              className="border border-white/30 px-3 py-1 text-white rounded"
               onClick={() => setMicEnabled((m) => !m)}
             >
               {micEnabled ? '🎙️ Mic On (mock)' : '🔇 Mic Off (mock)'}
@@ -432,11 +446,11 @@ function AkoolPersonaModalMock({
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (send(question), setQuestion(''))}
-              className="flex-1 bg-black border border-white/50 text-white px-2 py-1 font-mono"
+              className="flex-1 bg-black border border-white/20 text-white px-2 py-1 font-mono rounded"
               placeholder="Ask for a hint… (mock)"
             />
             <button
-              className="border px-3 py-1 text-white"
+              className="border border-white/30 px-3 py-1 text-white rounded"
               onClick={() => { send(question); setQuestion(''); }}
             >
               Send
@@ -447,7 +461,7 @@ function AkoolPersonaModalMock({
             Mock mode: no Akool/Agora usage. Good for UI flows & QA.
           </div>
 
-          <div className="mt-2 p-2 h-40 overflow-auto bg-black/40 border border-white/10 text-white font-mono text-xs">
+          <div className="mt-2 p-2 h-40 overflow-auto bg-black/40 border border-white/10 text-white font-mono text-xs rounded">
             {log.map((l, i) => <div key={i}>{l}</div>)}
           </div>
         </div>
