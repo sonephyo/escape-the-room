@@ -8,7 +8,7 @@ if (!geminiApiKey) {
 }
 const genAI: GoogleGenerativeAI = new GoogleGenerativeAI(geminiApiKey);
 
-async function generateForItem(puzzlePrompt: string | GenerateContentRequest | (string | Part)[]) {
+async function generatePuzzle(puzzlePrompt: string | GenerateContentRequest | (string | Part)[]) {
   try {
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
@@ -30,7 +30,7 @@ async function generateForItem(puzzlePrompt: string | GenerateContentRequest | (
 
 export async function getPuzzle(data: Character[]): Promise<Character[]> {
   try {
-    const tasks = data.map(() => generateForItem(puzzlePrompt));
+    const tasks = data.map(() => generatePuzzle(puzzlePrompt));
     const results = await Promise.all(tasks);
 
     const updatedData = data.map((character, index) => ({

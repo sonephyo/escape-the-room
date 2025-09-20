@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     const characters = documents.map((doc: any) => ({
       _id: doc._id,
       name: doc.name,
+      building: doc.building,
       description: doc.description,
     }));
 
