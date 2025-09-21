@@ -32,8 +32,8 @@ type CornellMapProps = {
 const MOVE_SPEED = 5;
 const CHARACTER_SIZE = 24;
 
-const VIEWPORT_WIDTH = 800;
-const VIEWPORT_HEIGHT = 600;
+const VIEWPORT_WIDTH = 1024;
+const VIEWPORT_HEIGHT = 720;
 
 const INTERACT_RADIUS = 42; // px from building center to trigger modal
 
@@ -426,7 +426,7 @@ export const CornellMap: React.FC<CornellMapProps> = ({ n, characters }) => {
         onSubmit={handleSubmitAnswer}
         onChat={handleChat}
       />
-      
+
       <AkoolChatModal
         open={chatOpen}
         onClose={() => setChatOpen(false)}

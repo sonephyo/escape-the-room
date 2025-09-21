@@ -51,30 +51,35 @@
 //   return worldCountry ? <CountryScene country={worldCountry} /> : null;
 // }
 
-
 // app/page.tsx
-'use client';
+"use client";
 
-import React from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { StartScreen } from '@/components/StartScreen';
-import { CountryScene } from '@/components/CountryScene';
-import type { CountryKey } from '@/game/countries';
+import React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { StartScreen } from "@/components/StartScreen";
+import { CountryScene } from "@/components/CountryScene";
+import type { CountryKey } from "@/game/countries";
+import { BackgroundFallingCharacters } from "@/components/BackgroundFallingCharacter";
 
 export default function Page() {
   const router = useRouter();
   const sp = useSearchParams();
 
-  const view = sp.get('view') ?? 'play';
-  const countryParam = sp.get('country') as CountryKey | null;
+  const view = sp.get("view") ?? "play";
+  const countryParam = sp.get("country") as CountryKey | null;
 
   const goToScene = (country: CountryKey) =>
     router.push(`/?view=scene&country=${country}`, { scroll: false });
 
-  if (view === 'scene' && countryParam) {
+  if (view === "scene" && countryParam) {
     return <CountryScene country={countryParam} />;
   }
 
   // default main play page
-  return <StartScreen onSelect={(country) => goToScene(country)} />;
+  return (
+    <>
+      <BackgroundFallingCharacters />
+      <StartScreen onSelect={(country) => goToScene(country)} />
+    </>
+  );
 }
