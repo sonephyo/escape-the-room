@@ -60,6 +60,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { StartScreen } from '@/components/StartScreen';
 import { CountryScene } from '@/components/CountryScene';
 import type { CountryKey } from '@/game/countries';
+import { BackgroundFallingCharacters } from '@/components/BackgroundFallingCharacters';
 
 export default function Page() {
   const router = useRouter();
@@ -72,9 +73,14 @@ export default function Page() {
     router.push(`/?view=scene&country=${country}`, { scroll: false });
 
   if (view === 'scene' && countryParam) {
-    return <CountryScene country={countryParam} />;
+    return <CountryScene country={countryParam} />
   }
 
   // default main play page
-  return <StartScreen onSelect={(country) => goToScene(country)} />;
+  return (
+  <>
+  <BackgroundFallingCharacters />
+    <StartScreen onSelect={(country) => goToScene(country)} />
+  </>
+  )
 }

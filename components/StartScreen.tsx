@@ -148,7 +148,7 @@ export function StartScreen({ onSelect }: { onSelect: (country: CountryKey) => v
   const [phase, setPhase] = useState<'intro' | 'world'>('intro');
 
   return (
-    <div className="w-full h-screen bg-black flex items-center justify-center overflow-hidden">
+    <div className="w-full h-screen bg-transparent flex items-center justify-center overflow-hidden">
       <div
         className="relative border-4 border-gray-600 shadow-2xl flex items-center justify-center"
         style={{ width: 980, height: 620, background: '#101010' }}
