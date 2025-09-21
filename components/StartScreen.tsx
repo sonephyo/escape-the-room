@@ -31,8 +31,7 @@
 //       const url = new URL('/api/get_n_random_chars', window.location.origin);
 // url.searchParams.set('n', String(n));
 
-
-//       const res = await fetch(url.toString(), {   
+//       const res = await fetch(url.toString(), {
 //         method: 'GET',
 //         headers: { 'Content-Type': 'application/json' },
 //       });
@@ -137,36 +136,43 @@
 //   );
 // };
 
+"use client";
 
-'use client';
+import React, { useState } from "react";
+import { CountrySelect } from "@/components/CountrySelect";
+import type { CountryKey } from "@/game/countries";
 
-import React, { useState } from 'react';
-import { CountrySelect } from '@/components/CountrySelect';
-import type { CountryKey } from '@/game/countries';
-
-export function StartScreen({ onSelect }: { onSelect: (country: CountryKey) => void }) {
-  const [phase, setPhase] = useState<'intro' | 'world'>('intro');
+export function StartScreen({
+  onSelect,
+}: {
+  onSelect: (country: CountryKey) => void;
+}) {
+  const [phase, setPhase] = useState<"intro" | "world">("intro");
 
   return (
     <div className="w-full h-screen bg-black flex items-center justify-center overflow-hidden">
       <div
         className="relative border-4 border-gray-600 shadow-2xl flex items-center justify-center"
-        style={{ width: 980, height: 620, background: '#101010' }}
+        style={{ width: 980, height: 620, background: "#101010" }}
       >
-        {phase === 'intro' && (
-          <div className="text-center text-white">
-            <div className="text-3xl font-bold mb-2">Escape the Room — Language Edition</div>
-            <div className="opacity-80 mb-6">Pick a country, walk to places, practice with an AI native.</div>
+        {phase === "intro" && (
+          <div className="mx-auto max-w-xl px-4 py-10 text-center text-white">
+            <div className="text-4xl sm:text-5xl font-extrabold tracking-tight drop-shadow-lg">
+              Travel and Learn
+            </div>
+            <div className="mt-3 text-base sm:text-lg text-white/80 leading-relaxed">
+              Pick a country, walk to places, practice with an AI native.
+            </div>
             <button
-              onClick={() => setPhase('world')}
-              className="px-4 py-2 border-2 border-white bg-black text-white hover:bg-white hover:text-black"
+              onClick={() => setPhase("world")}
+              className="mt-6 inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/10 px-6 py-3 font-semibold text-white backdrop-blur transition-all hover:bg-white hover:text-black hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white/60 focus:ring-offset-2 focus:ring-offset-black active:scale-95"
             >
               Start
             </button>
           </div>
         )}
 
-        {phase === 'world' && (
+        {phase === "world" && (
           <div className="w-full h-full flex items-center justify-center">
             <CountrySelect onChoose={(country) => onSelect(country)} />
           </div>
