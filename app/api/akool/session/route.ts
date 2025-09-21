@@ -24,6 +24,8 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
+
+    console.log("lalalalallalalalallallallalala: ", body);
     const { avatarId, duration = 100, voiceId, language, modeType = 2, backgroundUrl, voiceParams } = body;
 
     const host = process.env.NEXT_PUBLIC_AKOOL_HOST;
