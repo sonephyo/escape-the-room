@@ -25,7 +25,7 @@ export const PERSONAS: Record<string, Persona> = {
       "you are an expert in French Gothic architecture and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
     avatarId: "HB_sta_F_Steward_BECK",
     // voiceId: undefined,
-    // language: 'fr-FR',
+    language: 'fr-FR',
     modeType: 2,
     // backgroundUrl: '/countries/france.jpg',
   },
@@ -35,6 +35,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: "Les Invalides (France)",
     systemPrompt:
       "you are an expert in French military history and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
+    language: 'fr-FR',
     avatarId: "HB_sta_F_Steward_BECK",
     modeType: 2,
   },
@@ -44,6 +45,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: "Arc de Triomphe (France)",
     systemPrompt:
       "you are an expert in French military history and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
+    language: 'fr-FR',
     avatarId: "HB_sta_F_Steward_BECK",
     modeType: 2,
   },
@@ -53,6 +55,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: "Village Cheese (France)",
     systemPrompt:
       "you are an expert in French cheese-making and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
+    language: 'fr-FR',
     avatarId: "HB_sta_F_Steward_BECK",
     modeType: 2,
   },
@@ -62,6 +65,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: "Remembrance Square (France)",
     systemPrompt:
       "you are an expert in French military history and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
+    language: 'fr-FR',
     avatarId: "HB_sta_F_Steward_BECK",
     modeType: 2,
   },
@@ -71,7 +75,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: "Eiffel Tower (France)",
     systemPrompt:
       "you are an expert in Eiffel Tower and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
-    // language: 'fr-FR',
+    language: 'fr-FR',
     avatarId: "HB_sta_F_Steward_BECK",
     modeType: 2,
   },
@@ -81,6 +85,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: "Le Bistro (France)",
     systemPrompt:
       "you are an expert in Bistro Server and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
+    language: 'fr-FR',
     avatarId: "HB_sta_F_Steward_BECK",
     modeType: 2,
   },
@@ -90,6 +95,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: "Hôtel Paris (France)",
     systemPrompt:
       "you are an expert in Hotel Concierge and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
+    language: 'fr-FR',
     avatarId: "HB_sta_F_Steward_BECK",
     modeType: 2,
   },
@@ -99,6 +105,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: "Avenue des Champs-Élysées (France)",
     systemPrompt:
       "you are an expert in Champs-Elysees and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
+    language: 'fr-FR',
     avatarId: "HB_sta_F_Steward_BECK",
     modeType: 2,
   },
@@ -242,6 +249,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: "Amber Fort (Jaipur)",
     systemPrompt:
       "you are an expert in Rajasthan tourism and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
+    language: "hi-IN",
     avatarId: "avtr_in_rajasthan_placeholder",
     modeType: 2,
   },
@@ -250,6 +258,7 @@ export const PERSONAS: Record<string, Persona> = {
     building: "Taj Mahal (Agra)",
     systemPrompt:
       "you are an expert in Agra tourism and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
+    language: "hi-IN",
     avatarId: "avtr_in_agra_placeholder",
     modeType: 2,
   },
@@ -259,6 +268,7 @@ export const PERSONAS: Record<string, Persona> = {
     systemPrompt:
       "you are an expert in Indian transportation and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
     avatarId: "avtr_in_station_placeholder",
+    language: "hi-IN",
     modeType: 2,
   },
   "Varanasi Guide": {
@@ -267,6 +277,7 @@ export const PERSONAS: Record<string, Persona> = {
     systemPrompt:
       "you are an expert in Varanasi tourism and you only know about this. You will not answer anything other than the field you are in. Please have an interactive conversation with the user.",
     avatarId: "avtr_in_varanasi_placeholder",
+    language: "hi-IN",
     modeType: 2,
   },
 
