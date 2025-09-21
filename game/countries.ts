@@ -1,5 +1,5 @@
 // /game/countries.ts
-export type CountryKey = 'france' | 'spain' | 'italy' | 'japan' | 'germany';
+export type CountryKey = 'france' | 'spain' | 'italy' | 'usa' | 'germany' | 'nepal' | 'india';
 
 export type HotspotDef = {
   id: string;
@@ -40,12 +40,15 @@ export const COUNTRIES: Record<CountryKey, CountryConfig> = {
     key: 'spain',
     name: 'Spain',
     locale: 'es-ES',
-    bg: '/countries/spain.jpg',
+    bg: '/countries/spain.png',
     hotspots: [
-      { id: 'tapas',   label: 'Tapas Bar', xPct: 0.24, yPct: 0.72 },
-      { id: 'plaza',   label: 'Plaza',     xPct: 0.62, yPct: 0.58 },
-      { id: 'mercado', label: 'Mercado',   xPct: 0.80, yPct: 0.42 },
-    ],
+  { id: 'cafe',       label: 'El Café',         xPct: 0.22, yPct: 0.70 },
+  { id: 'estacion',   label: 'Estación de tren', xPct: 0.60, yPct: 0.55 },
+  { id: 'sagrada',    label: 'Sagrada Família',  xPct: 0.78, yPct: 0.40 },
+  { id: 'parkguell',  label: 'Park Güell',       xPct: 0.35, yPct: 0.45 },
+  { id: 'alhambra',   label: 'Alhambra',         xPct: 0.48, yPct: 0.30 },
+  { id: 'restaurante',label: 'Restaurante',      xPct: 0.68, yPct: 0.75 },
+],
   },
   italy: {
     key: 'italy',
@@ -58,16 +61,20 @@ export const COUNTRIES: Record<CountryKey, CountryConfig> = {
       { id: 'duomo',  label: 'Duomo',  xPct: 0.80, yPct: 0.30 },
     ],
   },
-  japan: {
-    key: 'japan',
-    name: 'Japan',
-    locale: 'ja-JP',
-    bg: '/countries/japan.jpg',
+  usa: {
+    key: 'usa',
+    name: 'USA',
+    locale: 'us-US',
+    bg: '/countries/us.png',
     hotspots: [
-      { id: 'sushi',   label: '寿司屋', xPct: 0.22, yPct: 0.66 },
-      { id: 'shrine',  label: '神社',   xPct: 0.65, yPct: 0.40 },
-      { id: 'karaoke', label: 'カラオケ', xPct: 0.78, yPct: 0.75 },
-    ],
+  { id: 'yellowstone', label: 'Yellowstone National Park', xPct: 0.20, yPct: 0.20 },
+  { id: 'washington',  label: 'Washington Monument',       xPct: 0.78, yPct: 0.18 },
+  { id: 'liberty',     label: 'Statue of Liberty',         xPct: 0.28, yPct: 0.45 },
+  { id: 'grandcanyon', label: 'Grand Canyon',              xPct: 0.70, yPct: 0.50 },
+  { id: 'whitehouse',  label: 'White House',               xPct: 0.25, yPct: 0.80 },
+  { id: 'fastfood',    label: 'McDonalds',                 xPct: 0.72, yPct: 0.82 },
+],
+
   },
   germany: {
     key: 'germany',
@@ -79,6 +86,39 @@ export const COUNTRIES: Record<CountryKey, CountryConfig> = {
       { id: 'biergarten',label: 'Biergarten', xPct: 0.58, yPct: 0.78 },
       { id: 'museum',    label: 'Museum',     xPct: 0.82, yPct: 0.36 },
     ],
+  },
+  nepal: {
+    key: 'nepal',
+    name: 'Nepal',
+    locale: 'np-NP',
+    bg: '/countries/nepal.png',
+    hotspots: [
+  { id: 'everest',    label: 'Mount Everest (Sagarmatha Region)', xPct: 0.18, yPct: 0.18 },
+  { id: 'pashupatinath', label: 'Pashupatinath Temple (Kathmandu)', xPct: 0.78, yPct: 0.18 },
+  { id: 'hotel',      label: 'Hotel',      xPct: 0.42, yPct: 0.32 },
+  { id: 'hospital',   label: 'Hospital',   xPct: 0.22, yPct: 0.55 },
+  { id: 'school',     label: 'School',     xPct: 0.45, yPct: 0.55 },
+  { id: 'boudhanath', label: 'Boudhanath Stupa (Kathmandu)', xPct: 0.70, yPct: 0.45 },
+  { id: 'train',      label: 'Train Station', xPct: 0.28, yPct: 0.82 },
+],
+
+  },
+  india: {
+    key: 'india',
+    name: 'India',
+    locale: 'in-IN',
+    bg: '/countries/india.png',
+   hotspots: [
+  { id: 'hotel',      label: 'Hotel',        xPct: 0.28, yPct: 0.15 },
+  { id: 'hospital',   label: 'Hospital',     xPct: 0.45, yPct: 0.22 },
+  { id: 'amberfort',  label: 'Amber Fort',   xPct: 0.78, yPct: 0.18 },
+  { id: 'tajmahal',   label: 'Taj Mahal',    xPct: 0.25, yPct: 0.42 },
+  { id: 'train',      label: 'Train Station',xPct: 0.28, yPct: 0.72 },
+  { id: 'varanasi1',  label: 'Varanasi Ghats (North)', xPct: 0.72, yPct: 0.48 },
+  { id: 'varanasi2',  label: 'Varanasi Ghats (South)', xPct: 0.70, yPct: 0.72 },
+]
+
+
   },
 };
 

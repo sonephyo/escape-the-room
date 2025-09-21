@@ -8,12 +8,16 @@ export const metadata = {
 
 import './globals.css';
 import ClientProviders from '@/components/ClientProviders';
+import GlobalExitButtons from '@/components/GlobalExitButtons';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <ClientProviders>{children}</ClientProviders>
+        <ClientProviders>
+          <GlobalExitButtons />
+          {children}
+          </ClientProviders>
         </body>
     </html>
   );

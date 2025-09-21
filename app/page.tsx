@@ -25,28 +25,56 @@
 //   );
 // }
 
+// 'use client';
+
+// import { useState } from 'react';
+// import { StartScreen } from '@/components/StartScreen';
+// import { CountryScene } from '@/components/CountryScene';
+// import type { CountryKey } from '@/game/countries';
+
+// type Screen = 'home' | 'world';
+
+// export default function Page() {
+//   const [screen, setScreen] = useState<Screen>('home');
+//   const [worldCountry, setWorldCountry] = useState<CountryKey | null>(null);
+
+//   const handleSelectCountry = (country: CountryKey) => {
+//     setWorldCountry(country);
+//     setScreen('world');
+//   };
+
+//   if (screen === 'home') {
+//     return <StartScreen onSelect={handleSelectCountry} />;
+//   }
+
+//   // world screen
+//   return worldCountry ? <CountryScene country={worldCountry} /> : null;
+// }
+
+
+// app/page.tsx
 'use client';
 
-import { useState } from 'react';
+import React from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { StartScreen } from '@/components/StartScreen';
 import { CountryScene } from '@/components/CountryScene';
 import type { CountryKey } from '@/game/countries';
 
-type Screen = 'home' | 'world';
-
 export default function Page() {
-  const [screen, setScreen] = useState<Screen>('home');
-  const [worldCountry, setWorldCountry] = useState<CountryKey | null>(null);
+  const router = useRouter();
+  const sp = useSearchParams();
 
-  const handleSelectCountry = (country: CountryKey) => {
-    setWorldCountry(country);
-    setScreen('world');
-  };
+  const view = sp.get('view') ?? 'play';
+  const countryParam = sp.get('country') as CountryKey | null;
 
-  if (screen === 'home') {
-    return <StartScreen onSelect={handleSelectCountry} />;
+  const goToScene = (country: CountryKey) =>
+    router.push(`/?view=scene&country=${country}`, { scroll: false });
+
+  if (view === 'scene' && countryParam) {
+    return <CountryScene country={countryParam} />;
   }
 
-  // world screen
-  return worldCountry ? <CountryScene country={worldCountry} /> : null;
+  // default main play page
+  return <StartScreen onSelect={(country) => goToScene(country)} />;
 }

@@ -4,7 +4,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { COUNTRIES, type CountryKey } from '@/game/countries';
 
-const ORDER: CountryKey[] = ['france', 'spain', 'italy', 'japan', 'germany'];
+const ORDER: CountryKey[] = ['france', 'spain', 'italy', 'usa', 'germany', 'nepal', 'india'];
 
 export function CountrySelect({ onChoose }: { onChoose: (key: CountryKey) => void }) {
   const [idx, setIdx] = useState(0);

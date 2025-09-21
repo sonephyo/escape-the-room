@@ -17,7 +17,10 @@ const VIEW_H = 600;
 // 277d48b
 // Map your game context → PERSONAS keys.
 // ⚠️ Change these strings to the exact keys you have in PERSONAS.
-function resolvePersonaFor(country: CountryKey, hotspotId: string): keyof typeof PERSONAS | undefined {
+function resolvePersonaFor(
+  country: CountryKey,
+  hotspotId: string
+): keyof typeof PERSONAS | undefined {
   const byCountry: Record<CountryKey, Partial<Record<string, keyof typeof PERSONAS>>> = {
     france: {
       notredame:       'Notre-Dame Docent',
@@ -31,14 +34,58 @@ function resolvePersonaFor(country: CountryKey, hotspotId: string): keyof typeof
       hotelparis:      'Hotel Concierge',
       champselysees:   'Champs-Elysees Local',
     },
-    spain:   { tapas: 'Spanish Server', plaza: 'Spanish Local', mercado: 'Spanish Vendor' },
-    italy:   { gelato: 'Italian Gelataio', piazza: 'Italian Local', duomo: 'Italian Guide' },
-    japan:   { sushi: 'Japanese Chef', shrine: 'Japanese Monk', karaoke: 'Japanese Host' },
-    germany: { bakery: 'German Baker', biergarten: 'German Host', museum: 'German Guide' },
+
+    // ✅ SPAIN (updated to match your hotspots)
+    spain: {
+      cafe:        'Spanish Server',        // El Café
+      estacion:    'Spanish Stationmaster', // Estación de tren
+      sagrada:     'Catalan Basilica Guide',// Sagrada Família
+      parkguell:   'Catalan Park Guide',    // Park Güell
+      alhambra:    'Andalusian Historian',  // Alhambra
+      restaurante: 'Spanish Waiter',        // Restaurante
+    },
+
+    italy: {
+      gelato:  'Italian Gelataio',
+      piazza:  'Italian Local',
+      duomo:   'Italian Guide',
+    },
+
+    // (leaving your usa mapping as-is)
+    usa: { sushi: 'Japanese Chef', shrine: 'Japanese Monk', karaoke: 'Japanese Host' },
+
+    germany: {
+      bakery:     'German Baker',
+      biergarten: 'German Host',
+      museum:     'German Guide',
+    },
+
+    // ✅ NEPAL
+    nepal: {
+      everest:        'Sherpa Guide',             // Mount Everest
+      pashupatinath:  'Kathmandu Priest',         // Pashupatinath Temple
+      hotel:          'Nepal Hotelier',           // Hotel
+      hospital:       'Nepal Medic',              // Hospital
+      school:         'Nepal Teacher',            // School
+      boudhanath:     'Stupa Monk',               // Boudhanath Stupa
+      train:          'Nepal Stationmaster',      // Train Station
+    },
+
+    // ✅ INDIA
+    india: {
+      hotel:      'Indian Hotelier',         // Hotel
+      hospital:   'Indian Doctor',           // Hospital
+      amberfort:  'Rajasthan Guide',         // Amber Fort
+      tajmahal:   'Agra Guide',              // Taj Mahal
+      train:      'Stationmaster',           // Train Station
+      varanasi1:  'Varanasi Guide',          // Ghats (North)
+      varanasi2:  'Varanasi Guide',          // Ghats (South)
+    },
   };
-  const table = byCountry[country] || {};
-  return table[hotspotId] || undefined;
+
+  return byCountry[country]?.[hotspotId];
 }
+
 
 export function CountryScene({ country }: { country: CountryKey }) {
   const cfg = COUNTRIES[country];
